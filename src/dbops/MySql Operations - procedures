@@ -1,0 +1,78 @@
+create table employee(
+	eid int(5),
+    ename varchar(50)
+);
+
+create database masstech;
+
+
+create table employee
+(
+eid int primary key auto_increment,
+ename varchar(100),
+email varchar(100),
+esal decimal(10,2)
+
+);
+
+insert into employee values(2,"prashant","pras42@gmail.com",13000);
+
+
+delimiter $$
+create procedure insertdata
+(
+IN e_name varchar(100),
+IN e_mail varchar(100),
+IN e_sal decimal(10,2)
+)
+begin
+ insert into employee(ename,email,esal)values(e_name,e_mail,e_sal);
+end $$
+delimiter ;
+
+delimiter $$
+create procedure fetchdata
+(
+	IN e_id int
+)
+begin
+ select * from employee where eid=e_id;
+end $$
+delimiter ;
+
+delimiter $$
+create procedure viewdata()
+begin
+ select * from employee;
+end $$
+delimiter ;
+
+delimiter $$
+create procedure updatedata
+(
+IN e_id int,
+IN e_name varchar(100),
+IN e_mail varchar(100),
+IN e_sal decimal(10,2)
+)
+begin
+ update employee set ename=e_name,email=e_mail,esal=e_sal where eid = e_id;
+end $$
+delimiter ;
+
+delimiter $$
+create procedure deletedata
+(
+IN e_id int
+)
+begin
+ delete from employee where eid=e_id;
+end $$
+delimiter ;
+
+
+call insertdata('anas','anas12@gmail.com',14000);
+call fetchdata(2);
+call viewdata();
+call updatedata(4,'abhi','abhi23@gmail.com',12500);
+call deletedata(4);
