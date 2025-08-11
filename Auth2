@@ -1,0 +1,146 @@
+package dbops;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class Auth {
+	static Scanner sc;
+	Connection con;
+	ResultSet rs;
+	public Auth() throws Exception{
+		
+		Class.forName("com.mysql.cj.jdbc.Driver");
+		con = DriverManager.getConnection("jdbc:mysql://localhost:3306/masstech","root","");
+		
+		sc= new Scanner(System.in);
+		
+	}
+	
+	public void loginUser() throws Exception{
+		
+		System.out.println("Enter Username/Email :: ");
+		String user_mail = sc.next();
+		System.out.println("Enter password :: ");
+		String user_passwd = sc.next();
+		
+		String q = "call loginUser('"+user_mail+"','"+user_passwd+"')";
+		PreparedStatement pstm = con.prepareStatement(q);
+		
+		ResultSet rs = pstm.executeQuery();
+		
+		if(rs.next()) {
+			System.out.println(rs.getString("message"));
+			String userRole = rs.getString("userRole");
+			
+			if("admin".equalsIgnoreCase(userRole)) {
+				System.out.println("Admin Login Successfull !! ");
+				System.out.println("You can create user now !!");
+				registerUser();
+			}else {
+				System.out.println("Role :: "+userRole+" Welcome !!");
+			}
+		}
+	}
+	
+
+	public void registerUser() throws Exception{
+		
+		String uname,email,upasswd,role;
+		try {
+		System.out.println("Enter user name :: ");
+		uname = sc.next();
+		System.out.println("Enter pass word :: ");
+		upasswd = sc.next();
+		System.out.println("Enter email :: ");
+		email = sc.next();
+		System.out.println("Enter Role :: ");
+		role = sc.next();
+		
+		
+		String q = "call registeruser('"+uname+"','"+email+"','"+upasswd+"','"+role+"')";
+		PreparedStatement pstm = con.prepareStatement(q);
+		
+		ResultSet rs = pstm.executeQuery();
+		if(rs.next()) {
+			System.out.println(rs.getString("message"));
+		}else {
+			System.out.println(rs.getString("message"));	
+		}
+		
+		}
+		catch(Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
+	
+	public static void main(String[] args)throws Exception {
+		Auth auth = new Auth();
+		auth.loginUser();
+		
+	}
+}
+
+
+
+
+/////////////////////////////////////////////   MYSQL //////////////////////////////////
+
+create table auth
+(
+	userId int primary key auto_increment,
+    userName varchar(100) not null,
+    userEmail varchar(100) not null,
+    userPasswd varchar(100),
+    userRole varchar(100)
+);
+
+delimiter $$
+create procedure registeruser
+(
+    in user_name varchar(50),
+    in e_mail varchar(100),
+    in pass_word varchar(100),
+    in user_role varchar(100)
+)
+begin
+	declare cint int;
+    select count(*) into cint from auth where userName=user_name OR userEmail = e_mail;
+    if(cint > 0) then
+		select 'Username or Email is already exist' as message;
+	else 
+		insert into auth(userName,userEmail,userPasswd,userRole)values(user_name,e_mail,pass_word,user_role);
+		select 'User registered!!!!' as message;
+    end if;
+end $$
+delimiter ;
+
+delimiter $$
+create procedure loginUser
+(
+ in username_email varchar(100),
+ in user_password varchar(100)
+)
+begin
+	declare cint int;
+    declare user_role varchar(100);
+    
+    select count(*) into cint from auth where(userName = username_email or userEmail = username_email)
+		and userPasswd = user_password;
+        
+	if cint = 0 then
+		select 'Invalid username/email or password' as message;
+	else	
+		select userRole into user_role from auth where(userName = username_email or userEmail = username_email)
+		and userPasswd = user_password;
+        
+        select 'login successfully' as message, user_role as userRole;
+	end if;
+end $$
+delimiter ;
+
+	
