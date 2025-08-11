@@ -1,0 +1,171 @@
+package dbops;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class Auth {
+	static Scanner sc;
+	Connection con;
+	ResultSet rs;
+	public Auth() throws Exception{
+		
+		Class.forName("com.mysql.cj.jdbc.Driver");
+		con = DriverManager.getConnection("jdbc:mysql://localhost:3306/masstech","root","");
+		
+		sc= new Scanner(System.in);
+		
+	}
+
+	public void registerUser() throws Exception{
+		
+		String uname,email,upasswd,role;
+		try {
+		System.out.println("Enter user name :: ");
+		uname = sc.nextLine();sc.nextLine();
+		System.out.println("Enter pass word :: ");
+		upasswd = sc.nextLine();
+		System.out.println("Enter email :: ");
+		email = sc.nextLine();
+		System.out.println("Enter Role :: ");
+		role = sc.nextLine();
+		
+		
+		String q = "call registeruser('"+uname+"','"+email+"','"+upasswd+"','"+role+"')";
+		PreparedStatement pstm = con.prepareStatement(q);
+		
+		ResultSet rs = pstm.executeQuery();
+		if(rs.next()) {
+			System.out.println(rs.getString("message"));
+		}else {
+			System.out.println(rs.getString("message"));	
+		}
+		
+		}
+		catch(Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
+	public void loginuser() throws SQLException {
+		
+		System.out.println("Choose how to login");
+		System.out.println("1. Using Email/Password");
+		System.out.println("2. Using Username/Password");
+		System.out.print("Enter your choice :: ");
+		int choice = sc.nextInt();
+		String a,b;
+		String e_mail,u_name,e_pass;
+		if(choice == 1) {
+			System.out.print("Enter email address :: ");
+			e_mail = sc.next();
+			System.out.print("Enter password :: ");
+			e_pass = sc.next();
+			a="call elogin('"+e_mail+"','"+e_pass+"')";
+			PreparedStatement pstm = con.prepareStatement(a);
+			rs = pstm.executeQuery();
+			if(rs.next()) {
+				System.out.println(rs.getString("role_"));
+			}else {
+				System.out.println("Email and Password is not matching");
+			}
+			
+			
+		}else if(choice == 2) {
+			System.out.print("Enter username address :: ");
+			u_name = sc.next();
+			System.out.print("Enter password :: ");
+			e_pass = sc.next();
+			b="call ulogin('"+u_name+"','"+e_pass+"')";
+			PreparedStatement pstm = con.prepareStatement(b);
+			rs = pstm.executeQuery();
+			if(rs.next()) {
+				System.out.println(rs.getString("role_"));
+			}else {
+				System.out.println("Username and Password is not matching!!");
+			}
+		}else {
+			System.out.println("Enter Valid Choice");
+		}
+		
+		
+	}
+	public static void main(String[] args)throws Exception {
+		Auth auth = new Auth();
+		//auth.registerUser();
+		auth.loginuser();
+	}
+}
+	
+
+
+
+
+
+
+create table auth
+(
+	id int primary key auto_increment,
+    username varchar(50),
+    email varchar(100),
+    pass_word varchar(100),
+    role_ varchar(100)
+    
+);
+drop table auth;
+
+alter table auth modify email varchar(100) unique not null;
+
+drop procedure registeruser;
+delimiter $$
+create procedure registeruser
+(
+    in user_name varchar(50),
+    in e_mail varchar(100),
+    in pass_Word varchar(100),
+    in role__ varchar(100)
+)
+begin
+	declare cint int;
+    select count(*) into cint from auth where username=user_name OR email = e_mail;
+    if(cint > 0) then
+		select 'Username or Email is already exist' as message;
+	else 
+		insert into auth(username,email,pass_word,role_)values(user_name,e_mail,pass_Word,role__);
+		select 'User registered!!!!' as message;
+    end if;
+end $$
+delimiter ;
+
+delimiter $$
+create procedure ulogin
+(
+	in user_Name varchar(100),
+    in pass_Word varchar(100)
+)
+begin
+	select role_ from auth where username = user_Name AND pass_word = pass_Word;
+end $$
+delimiter ;
+
+delimiter $$
+create procedure elogin
+(
+	in e_mail varchar(100),
+    in pass_Word varchar(100)
+)
+begin
+	select role_ from auth where email = e_mail AND pass_word = pass_Word;
+end $$
+delimiter ;
+
+select count(*) from auth where username='anas' OR email = 'anashkkjn';
+
+
+
+
+
+call registeruser('azharuddin','azharuddin@gmail.com','admin','software dev');
